@@ -4,7 +4,7 @@ endif ()
 
 project (glew C)
 
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.5)
 
 include(GNUInstallDirs)
 
@@ -148,15 +148,10 @@ endif()
 target_link_libraries (glew LINK_PUBLIC ${GLEW_LIBRARIES})
 target_link_libraries (glew_s ${GLEW_LIBRARIES})
 
-if(CMAKE_VERSION VERSION_LESS 2.8.12)
-  set(MAYBE_EXPORT "")
-else()
-  target_compile_definitions(glew_s INTERFACE "GLEW_STATIC")
-  foreach(t glew glew_s)
-    target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:include>)
-  endforeach()
-  set(MAYBE_EXPORT EXPORT glew-targets)
-endif()
+target_compile_definitions(glew_s INTERFACE "GLEW_STATIC")
+foreach(t glew glew_s)
+  target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:include>)
+endforeach()
 
 set(targets_to_install "")
 if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
@@ -168,7 +163,7 @@ if(NOT DEFINED BUILD_SHARED_LIBS OR NOT BUILD_SHARED_LIBS)
 endif()
 
 install ( TARGETS ${targets_to_install}
-          ${MAYBE_EXPORT}
+          EXPORT glew-targets
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -234,14 +229,12 @@ install (FILES
     ${GLEW_DIR}/include/GL/glxew.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/GL)
 
-if(MAYBE_EXPORT)
-  install(EXPORT glew-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/glew
-    NAMESPACE GLEW::)
-  install(FILES
-      ${CMAKE_CURRENT_SOURCE_DIR}/glew-config.cmake
-      ${CMAKE_CURRENT_SOURCE_DIR}/CopyImportedTargetProperties.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/glew)
-endif()
+install(EXPORT glew-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/glew
+  NAMESPACE GLEW::)
+install(FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/glew-config.cmake
+  ${CMAKE_CURRENT_SOURCE_DIR}/CopyImportedTargetProperties.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/glew)
 
 if(NOT TARGET uninstall)
   configure_file(

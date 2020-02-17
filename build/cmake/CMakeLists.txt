@@ -141,27 +141,41 @@ target_compile_options(glew_s
     # Remove security checks which are dependent on stdlib
     $<$<CXX_COMPILER_ID:MSVC>:-GS->
 
-    # Remove builtin functions dependency on Windows with GCC and Clang compiler
-    # to allow usage of the library with any compiler.
+    # Remove builtin functions dependency on Windows with GCC and Clang compiler.
     $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:GNU>>:-fno-builtin>
     $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:Clang>>:-fno-builtin>
 
     # Remove stack protection (which uses builtin functions) on Windows with GCC
-    #and Clang compiler to allow usage of the library with any compiler.
+    # and Clang compiler.
     $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:GNU>>:-fno-stack-protector>
     $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:Clang>>:-fno-stack-protector>
 )
 
+target_link_libraries(glew
+  PUBLIC
+    ${GLEW_LIBRARIES}
+  PRIVATE
+    # Add options from visual studio project.
+    $<$<CXX_COMPILER_ID:MSVC>:-BASE:0x62AA0000>
+
+    # Remove stdlib dependency for MSVC compiler.
+    $<$<CXX_COMPILER_ID:MSVC>:-nodefaultlib>
+    $<$<CXX_COMPILER_ID:MSVC>:-noentry>
+    $<$<CXX_COMPILER_ID:MSVC>:libvcruntime.lib>
+    $<$<CXX_COMPILER_ID:MSVC>:msvcrt.lib>
+
+    # Remove stdlib dependency on Windows with GCC and Clang compiler.
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:GNU>>:-nostdlib>
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:Clang>>:-nostdlib>
+)
+
+target_link_libraries(glew_s
+  PUBLIC
+    ${GLEW_LIBRARIES}
+)
+
 if (MSVC)
-  # add options from visual studio project
-  target_link_libraries (glew LINK_PRIVATE -BASE:0x62AA0000)
-  # remove stdlib dependency
-  target_link_libraries (glew LINK_PRIVATE -nodefaultlib -noentry)
-  target_link_libraries (glew LINK_PRIVATE libvcruntime.lib)
-  target_link_libraries (glew LINK_PRIVATE msvcrt.lib )
   string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
-elseif (WIN32 AND ((CMAKE_C_COMPILER_ID MATCHES "GNU") OR (CMAKE_C_COMPILER_ID MATCHES "Clang")))
-  target_link_libraries (glew LINK_PRIVATE -nostdlib)
 endif ()
 
 if (BUILD_FRAMEWORK)
@@ -176,9 +190,6 @@ if (BUILD_FRAMEWORK)
     OUTPUT_NAME GLEW
   )
 endif()
-
-target_link_libraries (glew LINK_PUBLIC ${GLEW_LIBRARIES})
-target_link_libraries (glew_s ${GLEW_LIBRARIES})
 
 foreach(t glew glew_s)
   target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:include>)
@@ -207,20 +218,20 @@ if (BUILD_UTILS)
     list (APPEND GLEWINFO_SRC_FILES ${GLEW_DIR}/build/glewinfo.rc)
   endif ()
   add_executable (glewinfo ${GLEWINFO_SRC_FILES})
-  target_link_libraries (glewinfo glew)
-  if (NOT WIN32)
-    target_link_libraries(glewinfo ${X11_LIBRARIES})
-  endif ()
+  target_link_libraries(glewinfo
+    glew
+    $<$<NOT,$<PLATFORM_ID:Windows>>:${X11_LIBRARIES}>
+  )
 
   set (VISUALINFO_SRC_FILES ${GLEW_DIR}/src/visualinfo.c)
   if (WIN32)
     list (APPEND VISUALINFO_SRC_FILES ${GLEW_DIR}/build/visualinfo.rc)
   endif ()
   add_executable (visualinfo ${VISUALINFO_SRC_FILES})
-  target_link_libraries (visualinfo glew)
-  if (NOT WIN32)
-    target_link_libraries(visualinfo ${X11_LIBRARIES})
-  endif ()
+  target_link_libraries(visualinfo
+    glew
+    $<$<NOT,$<PLATFORM_ID:Windows>>:${X11_LIBRARIES}>
+  )
 
   install ( TARGETS glewinfo visualinfo
             DESTINATION ${CMAKE_INSTALL_BINDIR})

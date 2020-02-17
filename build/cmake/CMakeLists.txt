@@ -49,8 +49,6 @@ endif()
 
 set (GLEW_LIBRARIES ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
 
-add_definitions (-DGLEW_NO_GLU)
-
 #### Regal mode ####
 
 if (GLEW_REGAL)
@@ -150,6 +148,7 @@ endif()
 target_compile_definitions(glew
   PUBLIC
     GLEW_BUILD
+    GLEW_NO_GLU
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:VC_EXTRALEAN>
 )
@@ -157,6 +156,7 @@ target_compile_definitions(glew
 target_compile_definitions(glew_s
   PUBLIC
     GLEW_STATIC
+    GLEW_NO_GLU
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:VC_EXTRALEAN>
 )

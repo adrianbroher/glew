@@ -47,13 +47,6 @@ if (NOT WIN32 AND NOT APPLE)
   find_package (X11)
 endif()
 
-if (WIN32)
-  set (GLEW_LIB_NAME glew32)
-else ()
-  set (GLEW_LIB_NAME GLEW)
-  set (DLL_PREFIX lib)
-endif ()
-
 set (GLEW_LIBRARIES ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
 
 add_definitions (-DGLEW_NO_GLU)
@@ -121,10 +114,38 @@ target_sources(glew_s
     $<$<PLATFORM_ID:Windows>:${GLEW_DIR}/build/glew.rc>
 )
 
-set_target_properties (glew PROPERTIES OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX "${DLL_PREFIX}"
-                                       VERSION ${GLEW_VERSION}
-                                       SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR})
-set_target_properties (glew_s PROPERTIES OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX lib)
+set_target_properties(glew PROPERTIES
+  OUTPUT_NAME GLEW
+  PREFIX lib
+  VERSION ${GLEW_VERSION}
+  SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}
+  FRAMEWORK_VERSION ${GLEW_VERSION}
+  MACOSX_FRAMEWORK_IDENTIFIER net.sourceforge.glew
+  MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${GLEW_VERSION}
+  MACOSX_FRAMEWORK_BUNDLE_VERSION ${GLEW_VERSION}
+  XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
+)
+
+set_target_properties(glew_s PROPERTIES
+  OUTPUT_NAME GLEW
+  PREFIX lib
+)
+
+if(WIN32)
+  set_target_properties(glew PROPERTIES
+    OUTPUT_NAME glew32
+    PREFIX ""
+  )
+
+  set_target_properties(glew_s PROPERTIES
+    OUTPUT_NAME glew32
+    PREFIX ""
+  )
+endif()
+
+if(BUILD_FRAMEWORK)
+  set_target_properties(glew PROPERTIES FRAMEWORK TRUE)
+endif()
 
 target_compile_definitions(glew
   PUBLIC
@@ -192,19 +213,6 @@ target_link_libraries(glew_s
 if (MSVC)
   string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 endif ()
-
-if (BUILD_FRAMEWORK)
-  set_target_properties(glew PROPERTIES
-    FRAMEWORK TRUE
-    FRAMEWORK_VERSION ${GLEW_VERSION}
-    MACOSX_FRAMEWORK_IDENTIFIER net.sourceforge.glew
-    MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${GLEW_VERSION}
-    MACOSX_FRAMEWORK_BUNDLE_VERSION ${GLEW_VERSION}
-    XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-    PUBLIC_HEADER "${GLEW_PUBLIC_HEADERS_FILES}"
-    OUTPUT_NAME GLEW
-  )
-endif()
 
 foreach(t glew glew_s)
   target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:include>)

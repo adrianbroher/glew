@@ -125,22 +125,42 @@ target_compile_definitions(glew_s
     $<$<CXX_COMPILER_ID:MSVC>:VC_EXTRALEAN>
 )
 
+target_compile_options(glew
+  PRIVATE
+    # Remove security checks which are dependent on stdlib
+    $<$<CXX_COMPILER_ID:MSVC>:-GS->
+
+    # Remove builtin function dependency on Windows with GCC and Clang compiler
+    # to allow usage of the library with any compiler.
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:GNU>>:-fno-builtin>
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:Clang>>:-fno-builtin>
+)
+
+target_compile_options(glew_s
+  PRIVATE
+    # Remove security checks which are dependent on stdlib
+    $<$<CXX_COMPILER_ID:MSVC>:-GS->
+
+    # Remove builtin functions dependency on Windows with GCC and Clang compiler
+    # to allow usage of the library with any compiler.
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:GNU>>:-fno-builtin>
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:Clang>>:-fno-builtin>
+
+    # Remove stack protection (which uses builtin functions) on Windows with GCC
+    #and Clang compiler to allow usage of the library with any compiler.
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:GNU>>:-fno-stack-protector>
+    $<$<AND,$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:Clang>>:-fno-stack-protector>
+)
+
 if (MSVC)
   # add options from visual studio project
   target_link_libraries (glew LINK_PRIVATE -BASE:0x62AA0000)
-  # kill security checks which are dependent on stdlib
-  target_compile_options (glew PRIVATE -GS-)
-  target_compile_options (glew_s PRIVATE -GS-)
   # remove stdlib dependency
   target_link_libraries (glew LINK_PRIVATE -nodefaultlib -noentry)
   target_link_libraries (glew LINK_PRIVATE libvcruntime.lib)
   target_link_libraries (glew LINK_PRIVATE msvcrt.lib )
   string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 elseif (WIN32 AND ((CMAKE_C_COMPILER_ID MATCHES "GNU") OR (CMAKE_C_COMPILER_ID MATCHES "Clang")))
-  # remove stdlib dependency on windows with GCC and Clang (for similar reasons
-  # as to MSVC - to allow it to be used with any Windows compiler)
-  target_compile_options (glew PRIVATE -fno-builtin -fno-stack-protector)
-  target_compile_options (glew_s PRIVATE -fno-builtin -fno-stack-protector)
   target_link_libraries (glew LINK_PRIVATE -nostdlib)
 endif ()
 

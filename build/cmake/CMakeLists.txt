@@ -213,21 +213,21 @@ install ( TARGETS ${targets_to_install}
 )
 
 if (BUILD_UTILS)
-  set (GLEWINFO_SRC_FILES ${GLEW_DIR}/src/glewinfo.c)
-  if (WIN32)
-    list (APPEND GLEWINFO_SRC_FILES ${GLEW_DIR}/build/glewinfo.rc)
-  endif ()
-  add_executable (glewinfo ${GLEWINFO_SRC_FILES})
+  add_executable(glewinfo
+    ${GLEW_DIR}/src/glewinfo.c
+    $<$<PLATFORM_ID:Windows>:${GLEW_DIR}/build/glewinfo.rc>
+  )
+
   target_link_libraries(glewinfo
     glew
     $<$<NOT,$<PLATFORM_ID:Windows>>:${X11_LIBRARIES}>
   )
 
-  set (VISUALINFO_SRC_FILES ${GLEW_DIR}/src/visualinfo.c)
-  if (WIN32)
-    list (APPEND VISUALINFO_SRC_FILES ${GLEW_DIR}/build/visualinfo.rc)
-  endif ()
-  add_executable (visualinfo ${VISUALINFO_SRC_FILES})
+  add_executable(visualinfo
+    ${GLEW_DIR}/src/visualinfo.c
+    $<$<PLATFORM_ID:Windows>:${GLEW_DIR}/build/visualinfo.rc>
+  )
+
   target_link_libraries(visualinfo
     glew
     $<$<NOT,$<PLATFORM_ID:Windows>>:${X11_LIBRARIES}>

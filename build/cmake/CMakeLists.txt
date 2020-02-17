@@ -95,20 +95,35 @@ endif ()
 
 #### GLEW ####
 
-include_directories (${GLEW_DIR}/include ${X11_INCLUDE_DIR})
+include_directories (${X11_INCLUDE_DIR})
 
-set (GLEW_PUBLIC_HEADERS_FILES ${GLEW_DIR}/include/GL/wglew.h ${GLEW_DIR}/include/GL/glew.h ${GLEW_DIR}/include/GL/glxew.h)
-set (GLEW_SRC_FILES ${GLEW_DIR}/src/glew.c)
+add_library(glew SHARED "")
 
-if (WIN32)
-  list (APPEND GLEW_SRC_FILES ${GLEW_DIR}/build/glew.rc)
-endif ()
+add_library(glew_s STATIC "")
 
-add_library (glew SHARED ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})
+target_sources(glew
+  PUBLIC
+    ${GLEW_DIR}/include/GL/wglew.h
+    ${GLEW_DIR}/include/GL/glew.h
+    ${GLEW_DIR}/include/GL/glxew.h
+  PRIVATE
+    ${GLEW_DIR}/src/glew.c
+    $<$<PLATFORM_ID:Windows>:${GLEW_DIR}/build/glew.rc>
+)
+
+target_sources(glew_s
+  PUBLIC
+    ${GLEW_DIR}/include/GL/wglew.h
+    ${GLEW_DIR}/include/GL/glew.h
+    ${GLEW_DIR}/include/GL/glxew.h
+  PRIVATE
+    ${GLEW_DIR}/src/glew.c
+    $<$<PLATFORM_ID:Windows>:${GLEW_DIR}/build/glew.rc>
+)
+
 set_target_properties (glew PROPERTIES OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX "${DLL_PREFIX}"
                                        VERSION ${GLEW_VERSION}
                                        SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR})
-add_library (glew_s STATIC ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})
 set_target_properties (glew_s PROPERTIES OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX lib)
 
 target_compile_definitions(glew

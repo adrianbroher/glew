@@ -105,16 +105,28 @@ if (WIN32)
 endif ()
 
 add_library (glew SHARED ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})
-set_target_properties (glew PROPERTIES COMPILE_DEFINITIONS "GLEW_BUILD" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX "${DLL_PREFIX}"
+set_target_properties (glew PROPERTIES OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX "${DLL_PREFIX}"
                                        VERSION ${GLEW_VERSION}
                                        SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR})
 add_library (glew_s STATIC ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})
-set_target_properties (glew_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX lib)
+set_target_properties (glew_s PROPERTIES OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX lib)
+
+target_compile_definitions(glew
+  PUBLIC
+    GLEW_BUILD
+  PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:VC_EXTRALEAN>
+)
+
+target_compile_definitions(glew_s
+  PUBLIC
+    GLEW_STATIC
+  PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:VC_EXTRALEAN>
+)
 
 if (MSVC)
   # add options from visual studio project
-  target_compile_definitions (glew PRIVATE "GLEW_BUILD;VC_EXTRALEAN")
-  target_compile_definitions (glew_s PRIVATE "GLEW_STATIC;VC_EXTRALEAN")
   target_link_libraries (glew LINK_PRIVATE -BASE:0x62AA0000)
   # kill security checks which are dependent on stdlib
   target_compile_options (glew PRIVATE -GS-)
@@ -148,7 +160,6 @@ endif()
 target_link_libraries (glew LINK_PUBLIC ${GLEW_LIBRARIES})
 target_link_libraries (glew_s ${GLEW_LIBRARIES})
 
-target_compile_definitions(glew_s INTERFACE "GLEW_STATIC")
 foreach(t glew glew_s)
   target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:include>)
 endforeach()

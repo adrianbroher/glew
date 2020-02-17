@@ -86,8 +86,6 @@ endif ()
 
 #### GLEW ####
 
-include_directories (${X11_INCLUDE_DIR})
-
 add_library(glew SHARED "")
 
 add_library(glew_s STATIC "")
@@ -144,6 +142,20 @@ endif()
 if(BUILD_FRAMEWORK)
   set_target_properties(glew PROPERTIES FRAMEWORK TRUE)
 endif()
+
+target_include_directories(glew_s
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${X11_INCLUDE_DIR}
+)
+
+target_include_directories(glew_s
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${X11_INCLUDE_DIR}
+)
 
 target_compile_definitions(glew
   PUBLIC
@@ -213,10 +225,6 @@ target_link_libraries(glew_s
 if (MSVC)
   string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 endif ()
-
-foreach(t glew glew_s)
-  target_include_directories(${t} PUBLIC $<INSTALL_INTERFACE:include>)
-endforeach()
 
 set(targets_to_install "")
 if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
